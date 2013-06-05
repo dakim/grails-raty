@@ -9,7 +9,7 @@ Example
 	<div id="demo"></div>
 	<ry:stars divId="demo" name="myScore" number="5" score="2" />
 
-###requiered
+###required
 
 - `divId` - the referenced div for displaying the stars
 
