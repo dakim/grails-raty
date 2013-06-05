@@ -45,7 +45,47 @@ Brief summary/description of the plugin.
     }
 
     def doWithDynamicMethods = { ctx ->
-        // TODO Implement registering dynamic methods to classes (optional)
+        for (domainClass in application.domainClasses) {
+            if (Ratyble.class.isAssignableFrom(domainClass.clazz)) {
+                domainClass.clazz.metaClass {
+
+                    rate = { rater, points ->
+
+                        def rating = RatyMapper.createCriteria().get {
+                            projections { property "rating" }
+                            rating {
+                                eq 'raterId', rater.id
+                            }
+                            eq "ratingRef", delegate.id
+                            eq "type", GrailsNameUtils.getPropertyName(delegate.class)
+                            cache true
+                        }
+
+                        if(rating){
+                            rating.points = points
+                        }else{
+                            rating = new Rating(points: points, raterClass: rater.class.name, raterId: rater.id)
+                            new RatyMapper(rating: rating, ratingRef:delegate.id, type:GrailsNameUtils.getPropertyName(delegate.class))
+                        }
+                        return delegate
+                    }
+
+                    getAverageRating = { ->
+
+                        def result = RatyMapper.createCriteria().get {
+                            rating {
+                                projections { avg 'points' }
+                            }
+                            eq "ratingRef", delegate.id
+                            eq "type", GrailsNameUtils.getPropertyName(delegate.class)                              
+                            cache true
+                        }
+                        return result
+                    }
+                }
+
+           }
+       }
     }
 
     def doWithApplicationContext = { applicationContext ->
